@@ -5,23 +5,80 @@ import { GlassCard, SectionTitle, GlassBadge } from '../components/Common';
 import { User, Award, GraduationCap, BookMarked, ArrowUpRight, CheckCircle2, Calendar, Megaphone } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Import generated academic events
-import academicEvents from '../data/academicEvents.json';
+// ----- ALL DATES ARE STATIC (Myanmar 2026) -----
 
-// Myanmar Public Holidays 2026 (static)
+// 1. Myanmar Public Holidays 2026
 const MYANMAR_HOLIDAYS_2026 = [
   { date: '2026-01-01', title: 'New Year\'s Day', description: 'International New Year', type: 'public' },
   { date: '2026-01-02', title: 'New Year\'s Holiday', description: 'Day after New Year', type: 'public' },
   { date: '2026-01-03', title: 'New Year\'s Holiday', description: 'New Year holiday', type: 'public' },
   { date: '2026-01-04', title: 'Independence Day', description: 'Independence from British rule in 1948', type: 'public' },
-  // ... include all the other holidays from previous answer ...
-  // (copy the full list from earlier)
+  { date: '2026-02-12', title: 'Union Day', description: 'Anniversary of the Panglong Agreement', type: 'public' },
+  { date: '2026-02-13', title: 'Union Day Holiday', description: 'Union Day bridge holiday', type: 'public' },
+  { date: '2026-02-16', title: 'Chinese New Year Holiday', description: 'Eve of Chinese New Year', type: 'public' },
+  { date: '2026-02-17', title: 'Chinese New Year', description: 'Start of Lunar New Year', type: 'public' },
+  { date: '2026-03-02', title: 'Peasants\' Day / Full Moon of Tabaung', description: 'Honoring farmers and Tabaung festival', type: 'public' },
+  { date: '2026-03-27', title: 'Armed Forces Day', description: 'Resistance Day against Japanese occupation', type: 'public' },
+  { date: '2026-03-28', title: 'Armed Forces Day Holiday', description: 'Armed Forces Day bridge holiday', type: 'public' },
+  { date: '2026-04-11', title: 'Thingyan', description: 'Water Festival begins', type: 'public' },
+  { date: '2026-04-12', title: 'Thingyan', description: 'Water Festival', type: 'public' },
+  { date: '2026-04-13', title: 'Thingyan', description: 'Water Festival', type: 'public' },
+  { date: '2026-04-14', title: 'Thingyan', description: 'Water Festival', type: 'public' },
+  { date: '2026-04-15', title: 'Thingyan', description: 'Water Festival', type: 'public' },
+  { date: '2026-04-16', title: 'Thingyan', description: 'Water Festival', type: 'public' },
+  { date: '2026-04-17', title: 'Myanmar New Year', description: 'First day of the Myanmar calendar', type: 'public' },
+  { date: '2026-04-18', title: 'Myanmar New Year Holiday', description: 'New Year holiday', type: 'public' },
+  { date: '2026-04-19', title: 'Myanmar New Year Holiday', description: 'New Year holiday', type: 'public' },
+  { date: '2026-04-30', title: 'Full Moon Day of Kasone', description: 'Buddha\'s birth, enlightenment, and death', type: 'public' },
+  { date: '2026-05-01', title: 'Labour Day', description: 'International Workers\' Day', type: 'public' },
+  { date: '2026-05-27', title: 'Eid ul-Adha', description: 'Feast of Sacrifice (dates may be adjusted based on moon sighting)', type: 'public' },
+  { date: '2026-07-19', title: 'Martyrs\' Day', description: 'Assassination of Aung San and cabinet members', type: 'public' },
+  { date: '2026-07-29', title: 'Full Moon Day of Waso', description: 'Beginning of Buddhist Lent', type: 'public' },
+  { date: '2026-10-24', title: 'Thadingyut Holiday', description: 'End of Buddhist Lent - Festival of Lights', type: 'public' },
+  { date: '2026-10-25', title: 'Thadingyut Holiday', description: 'Festival of Lights', type: 'public' },
+  { date: '2026-10-26', title: 'Full Moon Day of Thadingyut', description: 'Peak of the Festival of Lights', type: 'public' },
+  { date: '2026-10-27', title: 'Thadingyut Holiday', description: 'Festival of Lights continues', type: 'public' },
+  { date: '2026-11-08', title: 'Deepavali', description: 'Hindu Festival of Lights (date may be adjusted)', type: 'public' },
+  { date: '2026-11-21', title: 'Tazaungmone Holiday', description: 'Festival of Floating Lights', type: 'public' },
+  { date: '2026-11-22', title: 'Tazaungmone Holiday', description: 'Festival of Floating Lights', type: 'public' },
+  { date: '2026-11-23', title: 'Tazaungmone Holiday', description: 'Festival of Floating Lights', type: 'public' },
+  { date: '2026-11-24', title: 'Full Moon Day of Tazaungmone', description: 'Peak of the Floating Lights festival', type: 'public' },
+  { date: '2026-12-04', title: 'National Day', description: 'Anniversary of the 1920 university students\' strike', type: 'public' },
+  { date: '2026-12-05', title: 'National Day Holiday', description: 'National Day bridge holiday', type: 'public' },
   { date: '2026-12-25', title: 'Christmas Day', description: 'Birth of Jesus Christ', type: 'public' },
   { date: '2026-12-26', title: 'Christmas Holiday', description: 'Day after Christmas', type: 'public' },
 ];
 
-// Combine all important dates
-const ALL_IMPORTANT_DATES = [...MYANMAR_HOLIDAYS_2026, ...academicEvents];
+// 2. Academic Calendar Spring 2026 (expanded manually from your CSV)
+const ACADEMIC_EVENTS_2026 = [
+  { date: '2026-02-18', title: 'Orientation', description: 'Start of Orientation', type: 'academic' },
+  { date: '2026-02-19', title: 'Semester Start', description: 'Start of Semester', type: 'academic' },
+  // Midterm Exam: April 6–10 (5 days)
+  { date: '2026-04-06', title: 'Midterm Exam', description: 'Start of Midterm Exam', type: 'academic' },
+  { date: '2026-04-07', title: 'Midterm Exam', description: 'Midterm Exam (day)', type: 'academic' },
+  { date: '2026-04-08', title: 'Midterm Exam', description: 'Midterm Exam (day)', type: 'academic' },
+  { date: '2026-04-09', title: 'Midterm Exam', description: 'Midterm Exam (day)', type: 'academic' },
+  { date: '2026-04-10', title: 'Midterm Exam', description: 'End of Midterm Exam', type: 'academic' },
+  // Final Exam: June 8–12 (5 days)
+  { date: '2026-06-08', title: 'Final Exam', description: 'Start of Final Exam', type: 'academic' },
+  { date: '2026-06-09', title: 'Final Exam', description: 'Final Exam (day)', type: 'academic' },
+  { date: '2026-06-10', title: 'Final Exam', description: 'Final Exam (day)', type: 'academic' },
+  { date: '2026-06-11', title: 'Final Exam', description: 'Final Exam (day)', type: 'academic' },
+  { date: '2026-06-12', title: 'Final Exam', description: 'End of Final Exam', type: 'academic' },
+  // Semester End: June 12 (same as final day)
+  { date: '2026-06-12', title: 'Semester End', description: 'Semester End', type: 'academic' },
+  // Term Break: June 15–19 (5 days)
+  { date: '2026-06-15', title: 'Term Break', description: 'Start of Term Break', type: 'academic' },
+  { date: '2026-06-16', title: 'Term Break', description: 'Term Break (day)', type: 'academic' },
+  { date: '2026-06-17', title: 'Term Break', description: 'Term Break (day)', type: 'academic' },
+  { date: '2026-06-18', title: 'Term Break', description: 'Term Break (day)', type: 'academic' },
+  { date: '2026-06-19', title: 'Term Break', description: 'End of Term Break', type: 'academic' },
+  // Grade Submission: June 26 (single day)
+  { date: '2026-06-26', title: 'Grade Submission', description: 'Grade Submission', type: 'academic' },
+];
+
+// Combine all dates
+const ALL_IMPORTANT_DATES = [...MYANMAR_HOLIDAYS_2026, ...ACADEMIC_EVENTS_2026];
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -34,7 +91,7 @@ export const Dashboard: React.FC = () => {
     studentId, 
     major, 
     loading,
-    announcements = []  // will be used later
+    announcements = []
   } = useData();
 
   if (loading) {
@@ -58,7 +115,7 @@ export const Dashboard: React.FC = () => {
     show: { y: 0, opacity: 1 }
   };
 
-  // Calendar Widget (same as before)
+  // Calendar Widget
   const CalendarWidget = ({ dates }: { dates: { date: string; title: string; description?: string; type?: string }[] }) => {
     const today = new Date();
     const year = today.getFullYear();
@@ -131,7 +188,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <header className="mb-10">
         <h2 className="text-4xl font-bold text-white mb-2">
           Hello, {studentName ? studentName.split(' ')[0] : 'Student'}
@@ -139,12 +195,72 @@ export const Dashboard: React.FC = () => {
         <p className="text-white/60">Welcome to American University of Yangon.</p>
       </header>
 
-      {/* Stats cards (same as before) */}
       <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* ... your existing stats cards ... */}
+        {/* Student info card */}
+        <motion.div variants={item} className="lg:col-span-2">
+          <GlassCard className="p-6 h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-emerald-500/20 rounded-2xl">
+                <User className="text-emerald-400" size={24} />
+              </div>
+              <GlassBadge color="bg-cyan-500/20 text-cyan-300 border-cyan-500/30">{major}</GlassBadge>
+            </div>
+            <div className="mt-8">
+              <h3 className="text-2xl font-bold text-white">{studentName || user?.displayName || 'Student'}</h3>
+              <p className="text-white/40 font-mono tracking-tighter text-sm">{studentId}</p>
+              <div className="flex items-center gap-4 mt-2">
+                <p className="text-white/60 text-sm">{user?.email}</p>
+                <div className="w-1 h-1 bg-white/20 rounded-full" />
+                <p className="text-emerald-400 text-sm font-semibold">{attendance}% Attendance</p>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* GPA card */}
+        <motion.div variants={item}>
+          <GlassCard className="p-6 h-full flex flex-col bg-gradient-to-br from-emerald-500/20 to-teal-500/10">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-white/10 rounded-2xl">
+                <Award className="text-emerald-400" size={24} />
+              </div>
+            </div>
+            <div className="mt-auto">
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Cumulative GPA</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-white">{gpa.toFixed(2)}</span>
+                <span className="text-white/40 text-lg font-medium">/ 4.0</span>
+              </div>
+              <div className="mt-4 h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${(gpa / 4) * 100}%` }} />
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+
+        {/* Credits card */}
+        <motion.div variants={item}>
+          <GlassCard className="p-6 h-full flex flex-col border-emerald-500/30">
+            <div className="flex justify-between items-start">
+              <div className="p-3 bg-emerald-500/20 rounded-2xl">
+                <GraduationCap className="text-emerald-400" size={24} />
+              </div>
+            </div>
+            <div className="mt-auto">
+              <p className="text-white/40 text-xs font-semibold uppercase tracking-widest mb-1">Total Credits</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl font-bold text-white">{totalCredits}</span>
+                <span className="text-white/40 text-sm">Completed</span>
+              </div>
+              <p className="text-emerald-400/80 text-xs mt-3 flex items-center gap-1 font-medium">
+                <CheckCircle2 size={12} /> On track for graduation
+              </p>
+            </div>
+          </GlassCard>
+        </motion.div>
       </motion.div>
 
-      {/* Current Courses (same as before) */}
+      {/* Current Courses */}
       <section>
         <div className="flex items-center justify-between mb-6">
           <SectionTitle>Current Courses</SectionTitle>
@@ -179,7 +295,7 @@ export const Dashboard: React.FC = () => {
           <GlassCard className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="text-emerald-400" size={20} />
-              <SectionTitle className="!mb-0">Important Dates</SectionTitle>
+              <SectionTitle className="!mb-0">Important Dates (Myanmar 2026)</SectionTitle>
             </div>
             <CalendarWidget dates={ALL_IMPORTANT_DATES} />
             <div className="mt-4 pt-4 border-t border-white/10">
@@ -196,7 +312,7 @@ export const Dashboard: React.FC = () => {
             </div>
           </GlassCard>
 
-          {/* Announcements Card (placeholder) */}
+          {/* Announcements Card */}
           <GlassCard className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Megaphone className="text-emerald-400" size={20} />
