@@ -1,0 +1,13 @@
+/assets/*
+  Content-Type: application/javascript
+  Content-Type: text/css
+  Content-Type: application/json
+
+/*.js
+  Content-Type: application/javascript
+
+/*.css
+  Content-Type: text/css
+
+/*.json
+  Content-Type: application/json
