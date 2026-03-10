@@ -1,12 +1,9 @@
-﻿{
-    "rewrites":  [
-                     {
-                         "source":  "/api/proxy",
-                         "destination":  "/api/proxy.js"
-                     },
-                     {
-                         "source":  "/(.*)",
-                         "destination":  "/index.html"
-                     }
-                 ]
+{
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/api/proxy", "destination": "/api/proxy.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
