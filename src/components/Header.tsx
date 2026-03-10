@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import type { StudentLite } from "@/lib/googleSheets";
 
 type HeaderProps = {
@@ -41,15 +41,14 @@ export const Header = ({
     return () => window.clearInterval(timer);
   }, []);
 
-  const initials = useMemo(
-    () =>
-      firstName
-        .split(" ")
-        .slice(0, 2)
-        .map((item) => item.charAt(0).toUpperCase())
-        .join(""),
-    [firstName]
-  );
+  const initials = useMemo(() => {
+    const safeName = firstName || "";
+    return safeName
+      .split(" ")
+      .slice(0, 2)
+      .map((item) => item.charAt(0).toUpperCase())
+      .join("");
+  }, [firstName]);
 
   return (
     <header className="sticky top-0 z-20 mb-6 rounded-3xl border border-white/70 bg-white/80 px-4 py-4 shadow-xl backdrop-blur-lg md:px-6">
@@ -62,7 +61,7 @@ export const Header = ({
           ☰
         </button>
         <div className="min-w-[200px] flex-1">
-          <p className="text-xl font-semibold text-[#111827]">Welcome back, {firstName} 👋</p>
+          <p className="text-xl font-semibold text-[#111827]">Welcome back, {firstName || "Student"} 👋</p>
           <p className="text-sm text-[#4b5563]">{formatClock(now)}</p>
         </div>
 

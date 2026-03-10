@@ -1,4 +1,4 @@
-import { cn } from "@/utils/cn";
+﻿import { cn } from "@/utils/cn";
 
 type SidebarProps = {
   mobileOpen: boolean;
@@ -31,7 +31,7 @@ const menuItems: Array<{ icon: string; label: string; id: SidebarSection; badgeK
 ];
 
 const initialsFromName = (name: string) =>
-  name
+  (name || "")
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
@@ -115,7 +115,7 @@ export const Sidebar = ({
               {initials}
             </div>
             <div className="md:hidden xl:block">
-              <p className="text-sm font-medium text-[#111827]">{userName}</p>
+              <p className="text-sm font-medium text-[#111827]">{userName || "Student"}</p>
               <p className="text-xs text-[#6b7280]">ISP Student</p>
             </div>
           </div>
