@@ -1,12 +1,6 @@
-﻿{
-    "rewrites":  [
-                     {
-                         "source":  "/api/proxy",
-                         "destination":  "/api/proxy.js"
-                     },
-                     {
-                         "destination":  "/index.html",
-                         "source":  "/(.*)"
-                     }
-                 ]
+{
+  "rewrites": [
+    { "source": "/api/proxy", "destination": "/api/proxy.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
