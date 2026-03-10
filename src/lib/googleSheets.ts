@@ -1,4 +1,4 @@
-const GOOGLE_CLIENT_ID_FALLBACK =
+﻿const GOOGLE_CLIENT_ID_FALLBACK =
   "316467644383-78ueu8svimuqvshpplpeg0vs3d5ro49r.apps.googleusercontent.com";
 const APPS_SCRIPT_URL_FALLBACK =
   "https://script.google.com/macros/s/AKfycbwvBPGXMd5_HakndLKOS_zOClfAfTkOLVX8RfETT9beli9Hx4dBmF9KhS2h09R8__D-2A/exec";
@@ -128,7 +128,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
     announcements: [
       {
         id: "1",
-        title: "📝 Important: Midterm Schedule Released",
+        title: "ðŸ“ Important: Midterm Schedule Released",
         content: "Please review the updated ISP midterm schedule and confirm your exam slots by Friday.",
         priority: "HIGH",
         author: "Academic Office",
@@ -137,7 +137,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
       {
         id: "2",
-        title: "📚 Library Hours Extended",
+        title: "ðŸ“š Library Hours Extended",
         content: "The AUY library will remain open until 9:00 PM during midterm preparation week.",
         priority: "MEDIUM",
         author: "Campus Services",
@@ -146,7 +146,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
       {
         id: "3",
-        title: "🎤 Career Talk with Industry Mentors",
+        title: "ðŸŽ¤ Career Talk with Industry Mentors",
         content: "Join this Thursday's mentorship talk for practical internship and networking advice.",
         priority: "LOW",
         author: "Student Affairs",
@@ -155,7 +155,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
       {
         id: "4",
-        title: "🔔 Tuition Reminder",
+        title: "ðŸ”” Tuition Reminder",
         content: "Semester payment confirmation closes this week. Please contact finance for support if needed.",
         priority: "HIGH",
         author: "Finance Office",
@@ -164,7 +164,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
       {
         id: "5",
-        title: "💡 Innovation Lab Access",
+        title: "ðŸ’¡ Innovation Lab Access",
         content: "Innovation Lab access is now available on Saturdays for ISP capstone teams.",
         priority: "MEDIUM",
         author: "Innovation Hub",
@@ -173,7 +173,7 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
       {
         id: "6",
-        title: "🌱 Campus Green Week",
+        title: "ðŸŒ± Campus Green Week",
         content: "Join volunteer activities and earn participation points during AUY Green Week.",
         priority: "LOW",
         author: "Student Council",
@@ -182,12 +182,12 @@ const defaultDashboardData = (email: string): StudentDashboardData => {
       },
     ],
     deadlines: [
-      { id: "d1", icon: "📝", title: "Case Study Report", course: "BUS101", dueDate: "2026-03-12", daysLeft: 3, progress: 85 },
-      { id: "d2", icon: "✍️", title: "Essay Draft", course: "ENG110", dueDate: "2026-03-17", daysLeft: 8, progress: 65 },
-      { id: "d3", icon: "🎓", title: "Quiz 3", course: "ECO201", dueDate: "2026-03-20", daysLeft: 11, progress: 58 },
-      { id: "d4", icon: "🎉", title: "Group Presentation", course: "MKT202", dueDate: "2026-03-23", daysLeft: 14, progress: 42 },
-      { id: "d5", icon: "📊", title: "Problem Set", course: "STA205", dueDate: "2026-03-25", daysLeft: 16, progress: 35 },
-      { id: "d6", icon: "📋", title: "Ledger Submission", course: "ACC210", dueDate: "2026-03-28", daysLeft: 19, progress: 25 },
+      { id: "d1", icon: "ðŸ“", title: "Case Study Report", course: "BUS101", dueDate: "2026-03-12", daysLeft: 3, progress: 85 },
+      { id: "d2", icon: "âœï¸", title: "Essay Draft", course: "ENG110", dueDate: "2026-03-17", daysLeft: 8, progress: 65 },
+      { id: "d3", icon: "ðŸŽ“", title: "Quiz 3", course: "ECO201", dueDate: "2026-03-20", daysLeft: 11, progress: 58 },
+      { id: "d4", icon: "ðŸŽ‰", title: "Group Presentation", course: "MKT202", dueDate: "2026-03-23", daysLeft: 14, progress: 42 },
+      { id: "d5", icon: "ðŸ“Š", title: "Problem Set", course: "STA205", dueDate: "2026-03-25", daysLeft: 16, progress: 35 },
+      { id: "d6", icon: "ðŸ“‹", title: "Ledger Submission", course: "ACC210", dueDate: "2026-03-28", daysLeft: 19, progress: 25 },
     ],
     students: defaultStudents.map((student, index) =>
       index === 0 ? { ...student, name: `${prettyName} Student`, email } : student
@@ -284,7 +284,7 @@ const normalizeDashboardData = (raw: unknown, email: string): StudentDashboardDa
     const deadline = item as Record<string, unknown>;
     return {
       id: String(deadline.id ?? `deadline-${index + 1}`),
-      icon: String(deadline.icon ?? ["📝", "✍️", "🎓", "🎉", "📊", "📋"][index]),
+      icon: String(deadline.icon ?? ["ðŸ“", "âœï¸", "ðŸŽ“", "ðŸŽ‰", "ðŸ“Š", "ðŸ“‹"][index]),
       title: String(deadline.title ?? `Deadline ${index + 1}`),
       course: String(deadline.course ?? courses[index % courses.length]?.code ?? "TBA"),
       dueDate: String(deadline.dueDate ?? deadline.date ?? new Date().toISOString().slice(0, 10)),

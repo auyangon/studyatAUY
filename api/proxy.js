@@ -1,5 +1,5 @@
-const APPS_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbwvBPGXMd5_HakndLKOS_zOClfAfTkOLVX8RfETT9beli9Hx4dBmF9KhS2h09R8__D-2A/exec";
+﻿const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbxbE9fLOHjhJYBG-tq7sj9rmkQlMs83VrKgMbimPDLgJoc3ddItNc5EXUOXb2pfResULw/exec";
 
 export default async function handler(req, res) {
   const params = new URLSearchParams(req.query || {});
