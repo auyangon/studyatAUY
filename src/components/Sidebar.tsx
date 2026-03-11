@@ -1,75 +1,131 @@
-import { cn } from "../utils/cn";
-
-interface SidebarItem {
-  id: string;
-  icon: string;
-  label: string;
-}
+﻿import { cn } from "../utils/cn";
 
 interface SidebarProps {
-  activeItem: string;
+  activePage: string;
+  onPageChange: (page: string) => void;
   isOpen: boolean;
-  items: SidebarItem[];
   onClose: () => void;
-  onSelect: (sectionId: string) => void;
+  courseCount: number;
+  unreadCount: number;
+  userName: string;
+  onLogout: () => void;
 }
 
-export function Sidebar({ activeItem, isOpen, items, onClose, onSelect }: SidebarProps) {
+const menuItems = [
+  { id: "dashboard", label: "Dashboard", icon: "🏠" },
+  { id: "courses", label: "My Courses", icon: "📚", badge: "courseCount" },
+  { id: "calendar", label: "Calendar", icon: "📅" },
+  { id: "messages", label: "Messages", icon: "💬", badge: "unreadCount" },
+  { id: "assignments", label: "Assignments", icon: "📝" },
+  { id: "analytics", label: "Analytics", icon: "📊" },
+  { id: "settings", label: "Settings", icon: "⚙️" },
+];
+
+export const Sidebar = ({
+  activePage,
+  onPageChange,
+  isOpen,
+  onClose,
+  courseCount = 0,
+  unreadCount = 0,
+  userName = "Student",
+  onLogout,
+}: SidebarProps) => {
+  const safeUserName = userName || "Student";
+  const initials = safeUserName
+    .split(" ")
+    .slice(0, 2)
+    .map((n) => n.charAt(0).toUpperCase())
+    .join("")
+    .substring(0, 2);
+
   return (
     <>
-      <button
-        aria-label="Close sidebar"
+      <div
         className={cn(
-          "fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
-          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+          "fixed inset-0 bg-black/20 z-30 lg:hidden transition-opacity",
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
-        type="button"
       />
-
+      
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-[19.5rem] flex-col px-4 py-4 transition-transform duration-300 lg:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 z-40 transition-transform",
+          "lg:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="glass-panel flex h-full flex-col rounded-[34px] p-4">
-          <nav className="flex-1 space-y-1.5">
-            {items.map((item) => {
-              const isActive = item.id === activeItem;
-
-              return (
-                <button
-                  key={item.id}
-                  className={cn(
-                    "relative flex w-full items-center gap-3 rounded-[22px] px-4 py-3.5 text-left text-sm font-medium transition-all duration-200 hover:scale-[1.01]",
-                    isActive
-                      ? "bg-[linear-gradient(135deg,#88d8c0_0%,#56ab91_100%)] text-[#173328] shadow-[0_18px_36px_-18px_rgba(86,171,145,0.58)]"
-                      : "text-slate-600 hover:bg-white/72 hover:text-slate-900",
-                  )}
-                  onClick={() => {
-                    onSelect(item.id);
-                    onClose();
-                  }}
-                  type="button"
-                >
-                  {isActive ? <span className="absolute inset-y-3 left-2 w-1 rounded-full bg-white/88" /> : null}
-                  <span className="text-lg">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className="widget-panel px-4 py-4 text-sm text-slate-500">
-            <p className="eyebrow">Live Sync</p>
-            <p className="mt-3 font-medium text-slate-900">Google Sheets checks every 30 seconds.</p>
-            <p className="mt-2 leading-6">
-              Announcements, attendance, and academic updates stay current without leaving the portal.
-            </p>
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#1e3c2c] to-[#2d5a42] rounded-xl flex items-center justify-center">
+              <span className="text-xl font-bold text-[#c5a572]">AU</span>
+            </div>
+            <div>
+              <h1 className="font-bold text-gray-900">AUY Portal</h1>
+              <p className="text-xs text-[#c5a572]">American University</p>
+            </div>
           </div>
+        </div>
+
+        <nav className="p-4 space-y-1">
+          {menuItems.map((item) => {
+            const isActive = activePage === item.id;
+            let badgeValue: number | null = null;
+            if (item.badge === "courseCount") badgeValue = courseCount;
+            if (item.badge === "unreadCount") badgeValue = unreadCount;
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onPageChange(item.id);
+                  onClose();
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm transition-all",
+                  isActive
+                    ? "bg-[#1e3c2c] text-white"
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+              >
+                <span className="flex items-center gap-3">
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </span>
+                {badgeValue ? (
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-xs font-bold",
+                      isActive ? "bg-white/20 text-white" : "bg-red-500 text-white"
+                    )}
+                  >
+                    {badgeValue}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#c5a572] to-[#d4b583] flex items-center justify-center text-white font-bold">
+              {initials || "AU"}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">{safeUserName}</p>
+              <p className="text-xs text-gray-500">ISP Student</p>
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="w-full py-2 px-4 bg-gradient-to-r from-[#1e3c2c] to-[#2d5a42] text-white rounded-xl text-sm font-medium hover:shadow-lg transition"
+          >
+            Logout
+          </button>
         </div>
       </aside>
     </>
   );
-}
+};

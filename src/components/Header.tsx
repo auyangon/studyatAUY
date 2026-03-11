@@ -1,111 +1,90 @@
-import type { StudentSummary } from "../lib/googleSheets";
+﻿import { useEffect, useMemo, useState } from "react";
 
 interface HeaderProps {
-  activeSectionLabel: string;
-  canViewAllStudents: boolean;
-  clock: Date;
   firstName: string;
-  onMenuToggle: () => void;
-  onSearchChange: (value: string) => void;
-  onStudentChange: (email: string) => void;
+  clock: Date;
   search: string;
-  selectedStudentEmail: string;
-  students: StudentSummary[];
+  onSearchChange: (value: string) => void;
+  onMenuToggle: () => void;
   syncing: boolean;
+  canViewAllStudents: boolean;
+  students: Array<{ id: string; name: string; email: string }>;
+  selectedEmail: string;
+  onStudentChange: (email: string) => void;
 }
 
-const clockFormatter = new Intl.DateTimeFormat("en-US", {
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-  month: "short",
-  weekday: "short",
-});
-
-export function Header({
-  activeSectionLabel,
-  canViewAllStudents,
+export const Header = ({
+  firstName = "",
   clock,
-  firstName,
-  onMenuToggle,
-  onSearchChange,
-  onStudentChange,
   search,
-  selectedStudentEmail,
-  students,
+  onSearchChange,
+  onMenuToggle,
   syncing,
-}: HeaderProps) {
+  canViewAllStudents,
+  students = [],
+  selectedEmail,
+  onStudentChange,
+}: HeaderProps) => {
+  const safeFirstName = firstName || "Student";
+  const initials = useMemo(() => {
+    return safeFirstName
+      .split(" ")
+      .slice(0, 2)
+      .map((n) => n.charAt(0).toUpperCase())
+      .join("")
+      .substring(0, 2);
+  }, [safeFirstName]);
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
   return (
-    <header className="fixed inset-x-0 top-0 z-20 px-4 pt-4 sm:px-6 lg:left-[20.5rem] lg:px-8">
-      <div className="glass-panel mx-auto flex w-full max-w-7xl flex-col gap-4 rounded-[30px] px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            aria-label="Open navigation menu"
-            className="widget-panel inline-flex h-11 w-11 items-center justify-center rounded-[18px] text-lg lg:hidden"
-            onClick={onMenuToggle}
-            type="button"
-          >
-            ☰
-          </button>
+    <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={onMenuToggle} className="lg:hidden text-2xl">☰</button>
           <div>
-            <p className="eyebrow">Welcome Back</p>
-            <h2 className="mt-2 text-lg font-semibold text-slate-900 sm:text-xl">
-              {firstName}, you are viewing {activeSectionLabel}
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">{clockFormatter.format(clock)}</p>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Welcome back, {safeFirstName} 👋
+            </h1>
+            <p className="text-sm text-gray-500">{formatTime(clock)}</p>
           </div>
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,18rem)_minmax(0,15rem)_auto] lg:items-center">
-          <label className="widget-panel flex min-w-0 items-center gap-3 px-4 py-3">
-            <span className="text-base">🔎</span>
+        <div className="flex items-center gap-4">
+          {canViewAllStudents && students.length > 0 && (
+            <select
+              value={selectedEmail}
+              onChange={(e) => onStudentChange(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-xl text-sm"
+            >
+              {students.map((s) => (
+                <option key={s.id} value={s.email}>{s.name}</option>
+              ))}
+            </select>
+          )}
+
+          <div className="relative">
             <input
-              aria-label={`Search ${activeSectionLabel}`}
-              className="w-full min-w-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={`Search ${activeSectionLabel.toLowerCase()}`}
               type="text"
               value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search..."
+              className="pl-4 pr-10 py-2 border border-gray-300 rounded-xl text-sm w-64"
             />
-          </label>
+            {syncing && (
+              <div className="absolute right-3 top-2.5">
+                <div className="w-4 h-4 border-2 border-[#c5a572] border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
 
-          {canViewAllStudents ? (
-            <label className="widget-panel flex min-w-0 items-center gap-3 px-4 py-3">
-              <span className="text-base">🎓</span>
-              <select
-                aria-label="Select student"
-                className="w-full min-w-0 bg-transparent text-sm text-slate-900 outline-none"
-                onChange={(event) => onStudentChange(event.target.value)}
-                value={selectedStudentEmail}
-              >
-                {students.map((student) => (
-                  <option key={student.email} value={student.email}>
-                    {student.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          <div className="widget-panel flex items-center justify-between gap-3 px-4 py-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">Portal Status</p>
-              <p className="mt-1 text-sm font-medium text-slate-900">Light mode, live sheet sync</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {syncing ? (
-                <span className="inline-flex items-center gap-2 text-xs font-medium text-[#2e6e59]">
-                  <span className="sync-spinner" />
-                  Syncing
-                </span>
-              ) : null}
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[16px] bg-white/70 text-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.85)]">
-                ☀️
-              </span>
-            </div>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#c5a572] to-[#d4b583] flex items-center justify-center text-white font-bold">
+            {initials || "AU"}
           </div>
         </div>
       </div>
     </header>
   );
-}
+};
