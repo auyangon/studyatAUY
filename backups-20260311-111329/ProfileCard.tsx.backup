@@ -1,4 +1,4 @@
-﻿interface ProfileCardProps {
+interface ProfileCardProps {
   email: string;
   enrolledCoursesCount: number;
   fullName: string;
@@ -24,7 +24,7 @@ function getGpaTone(gpa: number) {
 function getInitials(name: string) {
   return name
     .split(" ")
-    .filter(Boolean) // safe
+    .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase() ?? "")
     .join("");

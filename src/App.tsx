@@ -1,671 +1,201 @@
-﻿import { AnimatePresence, motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnnouncementsCard } from "./components/AnnouncementsCard";
-import { AttendanceSummaryCard } from "./components/AttendanceSummaryCard";
-import { ChangePassword } from "./components/ChangePassword";
-import { CourseProgressCard } from "./components/CourseProgressCard";
-import { DeadlinesCard } from "./components/DeadlinesCard";
-import { Header } from "./components/Header";
-import { Login } from "./components/Login";
-import { ProfileCard } from "./components/ProfileCard";
-import { QuickStatsCard } from "./components/QuickStatsCard";
-import { Sidebar } from "./components/Sidebar";
-import { SyncStatus } from "./components/SyncStatus";
+﻿import { useState, useEffect } from "react";
 import { useAuth } from "./hooks/useAuth";
 import { useRealtimeData } from "./hooks/useRealtimeData";
-import { changePassword as changePasswordRequest } from "./lib/googleSheets";
-
-type SectionId =
-  | "dashboard"
-  | "courses"
-  | "calendar"
-  | "messages"
-  | "assignments"
-  | "analytics"
-  | "settings";
-
-interface SectionMeta {
-  title: string;
-  description: string;
-}
-
-const NAV_ITEMS = [
-  { id: "dashboard" as const, label: "Dashboard", icon: "ðŸ " },
-  { id: "courses" as const, label: "My Courses", icon: "ðŸ“š" },
-  { id: "calendar" as const, label: "Calendar", icon: "ðŸ“…" },
-  { id: "messages" as const, label: "Messages", icon: "ðŸ’¬" },
-  { id: "assignments" as const, label: "Assignments", icon: "ðŸ“" },
-  { id: "analytics" as const, label: "Analytics", icon: "ðŸ“Š" },
-  { id: "settings" as const, label: "Settings", icon: "âš™ï¸" },
-];
-
-const SECTION_META: Record<SectionId, SectionMeta> = {
-  dashboard: {
-    title: "Dashboard",
-    description: "A calmer, premium overview of your semester with attendance, coursework, notices, and deadlines in one polished AUY workspace.",
-  },
-  courses: {
-    title: "My Courses",
-    description: "Track classroom momentum, faculty details, and Google Classroom access with a cleaner academic view.",
-  },
-  calendar: {
-    title: "Calendar",
-    description: "Stay ahead of submissions and campus timing with a focused view of the weeks ahead.",
-  },
-  messages: {
-    title: "Messages",
-    description: "Review important notices and academic updates in a quieter, easier-to-scan message feed.",
-  },
-  assignments: {
-    title: "Assignments",
-    description: "Prioritize what matters next and keep every course deadline moving smoothly toward completion.",
-  },
-  analytics: {
-    title: "Analytics",
-    description: "See your GPA, attendance, and semester progress together with clearer academic context.",
-  },
-  settings: {
-    title: "Settings",
-    description: "Manage your password, portal session, and sync controls with a more refined account space.",
-  },
-};
-
-function matchesSearch(search: string, values: Array<string | number | undefined | null>) {
-  if (!search) {
-    return true;
-  }
-
-  return values.some((value) => String(value ?? "").toLowerCase().includes(search));
-}
-
-function getGreeting(clock: Date) {
-  const hour = clock.getHours();
-
-  if (hour < 12) {
-    return "Good morning";
-  }
-
-  if (hour < 17) {
-    return "Good afternoon";
-  }
-
-  return "Good evening";
-}
-
-function AppSkeleton() {
-  return (
-    <div className="space-y-6">
-      <section className="portal-card overflow-hidden rounded-[40px] px-6 py-7 sm:px-8 lg:px-10 lg:py-10">
-        <div className="grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_24rem]">
-          <div className="space-y-4">
-            <div className="skeleton-block h-3 w-40" />
-            <div className="skeleton-block h-12 w-full max-w-2xl rounded-[24px]" />
-            <div className="skeleton-block h-4 w-full max-w-xl" />
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[0, 1, 2].map((item) => (
-                <div key={item} className="widget-panel p-5">
-                  <div className="skeleton-block h-3 w-20" />
-                  <div className="mt-4 skeleton-block h-8 w-24 rounded-[16px]" />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="feature-panel min-h-52 p-6">
-              <div className="skeleton-block h-3 w-28 bg-white/24" />
-              <div className="mt-6 skeleton-block h-12 w-20 rounded-[20px] bg-white/24" />
-              <div className="mt-6 skeleton-block h-3 w-full bg-white/24" />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-              {[0, 1].map((item) => (
-                <div key={item} className="widget-panel p-5">
-                  <div className="skeleton-block h-3 w-24" />
-                  <div className="mt-4 skeleton-block h-6 w-40 rounded-[16px]" />
-                  <div className="mt-3 skeleton-block h-3 w-full" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-6 xl:grid-cols-12">
-        {[0, 1, 2, 3].map((item) => (
-          <section key={item} className="portal-card p-6 xl:col-span-6">
-            <div className="skeleton-block h-3 w-32" />
-            <div className="mt-5 skeleton-block h-8 w-52 rounded-[16px]" />
-            <div className="mt-6 space-y-3">
-              <div className="skeleton-block h-20 w-full rounded-[24px]" />
-              <div className="skeleton-block h-20 w-full rounded-[24px]" />
-              <div className="skeleton-block h-20 w-full rounded-[24px]" />
-            </div>
-          </section>
-        ))}
-      </div>
-    </div>
-  );
-}
+import { Login } from "./components/Login";
+import { Sidebar } from "./components/Sidebar";
+import { Header } from "./components/Header";
+import { ProfileCard } from "./components/ProfileCard";
+import { CourseProgressCard } from "./components/CourseProgressCard";
+import { AttendanceSummaryCard } from "./components/AttendanceSummaryCard";
+import { AnnouncementsCard } from "./components/AnnouncementsCard";
+import { DeadlinesCard } from "./components/DeadlinesCard";
+import { QuickStatsCard } from "./components/QuickStatsCard";
+import { SyncStatus } from "./components/SyncStatus";
+import { ChangePassword } from "./components/ChangePassword";
 
 export function App() {
-  const { authError, authLoading, isAuthenticated, login, logout, userEmail } = useAuth();
-  const [activeSection, setActiveSection] = useState<SectionId>("dashboard");
-  const [search, setSearch] = useState("");
+  const { isAuthenticated, login, logout, userEmail, authLoading, authError } = useAuth();
+  const [activePage, setActivePage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
-  const [clock, setClock] = useState(() => new Date());
-  const [selectedStudentEmail, setSelectedStudentEmail] = useState<string | undefined>(undefined);
-
-  const { data, error, lastSync, loading, markAnnouncementRead, refresh, syncing } = useRealtimeData({
-    email: userEmail,
-    selectedStudentEmail,
-  });
+  const [search, setSearch] = useState("");
+  const [passwordModal, setPasswordModal] = useState(false);
+  const [clock, setClock] = useState(new Date());
+  
+  const { data, loading, error, refresh, markRead, syncing, lastSync } = useRealtimeData(userEmail);
 
   useEffect(() => {
-    const updateClock = () => setClock(new Date());
-    updateClock();
-
-    const interval = window.setInterval(updateClock, 60_000);
-    return () => window.clearInterval(interval);
+    const timer = setInterval(() => setClock(new Date()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    setSearch("");
-    setSidebarOpen(false);
-  }, [activeSection]);
-
-  useEffect(() => {
-    if (!data) {
-      return;
-    }
-
-    setSelectedStudentEmail((current) => {
-      if (!data.canViewAllStudents) {
-        return data.email;
-      }
-
-      return current ?? data.email;
-    });
-  }, [data]);
-
-  const handlePasswordChange = useCallback(
-    async (currentPassword: string, newPassword: string) => {
-      if (!userEmail) {
-        throw new Error("You need to be signed in to update your password.");
-      }
-
-      await changePasswordRequest({ email: userEmail, oldPassword: currentPassword, newPassword });
-    },
-    [userEmail],
-  );
-
-  const normalizedSearch = search.trim().toLowerCase();
-  const attendanceRate = useMemo(() => {
-    if (!data) {
-      return 0;
-    }
-
-    const total = data.attendance.present + data.attendance.late + data.attendance.absent;
-    return total > 0 ? ((data.attendance.present + data.attendance.late * 0.5) / total) * 100 : 0;
-  }, [data]);
-
-  const filtered = useMemo(() => {
-    if (!data) {
-      return {
-        announcements: [],
-        attendanceByCourse: [],
-        courses: [],
-        deadlines: [],
-      };
-    }
-
-    return {
-      announcements: data.announcements.filter((announcement) =>
-        matchesSearch(normalizedSearch, [
-          announcement.title,
-          announcement.content,
-          announcement.author,
-          announcement.priority,
-        ]),
-      ),
-      attendanceByCourse: data.attendanceByCourse.filter((course) =>
-        matchesSearch(normalizedSearch, [course.code, course.percentage, course.present, course.late, course.absent]),
-      ),
-      courses: data.courses.filter((course) =>
-        matchesSearch(normalizedSearch, [course.code, course.name, course.teacher, course.grade]),
-      ),
-      deadlines: data.deadlines.filter((deadline) =>
-        matchesSearch(normalizedSearch, [deadline.icon, deadline.title, deadline.course, deadline.dueDate]),
-      ),
-    };
-  }, [data, normalizedSearch]);
-
-  const activeMeta = SECTION_META[activeSection];
-  const urgentDeadlines = (data?.deadlines || []).filter((deadline) => deadline.daysLeft <= 7).length;
-  const nextDeadline = data?.deadlines?.[0];
-  const semesterProgress = data
-    ? Math.min((data.semesterWeek / Math.max(data.semesterWeeksTotal, 1)) * 100, 100)
-    : 0;
-
-  const heroWidgets = data
-    ? {
-        analytics: [
-          { label: "GPA", value: data.gpa.toFixed(2) },
-          { label: "Attendance", value: `${attendanceRate.toFixed(0)}%` },
-          { label: "Completed", value: String(data.completedCourses) },
-        ],
-        assignments: [
-          { label: "Urgent", value: String(urgentDeadlines) },
-          { label: "Next Due", value: nextDeadline ? `${nextDeadline.daysLeft} days` : "Clear" },
-          { label: "Credits", value: String(data.creditsEnrolled) },
-        ],
-        calendar: [
-          { label: "Next Deadline", value: nextDeadline ? `${nextDeadline.daysLeft} days` : "Clear" },
-          { label: "Finals", value: `${data.daysUntilFinals} days` },
-          { label: "Unread", value: String(data.unreadAnnouncements) },
-        ],
-        courses: [
-          { label: "Active", value: String(data.activeCourses) },
-          { label: "Credits", value: String(data.creditsEnrolled) },
-          { label: "Attendance", value: `${attendanceRate.toFixed(0)}%` },
-        ],
-        dashboard: [
-          { label: "GPA", value: data.gpa.toFixed(2) },
-          { label: "Attendance", value: `${attendanceRate.toFixed(0)}%` },
-          { label: "Unread", value: String(data.unreadAnnouncements) },
-        ],
-        messages: [
-          {
-            label: "Unread",
-            value: String(data.unreadAnnouncements),
-          },
-          {
-            label: "Last Sync",
-            value: lastSync
-              ? new Date(lastSync).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
-              : "Pending",
-          },
-          { label: "Courses", value: String(data.activeCourses) },
-        ],
-        settings: [
-          { label: "Status", value: data.status },
-          { label: "Student ID", value: data.studentId },
-          { label: "Study Mode", value: data.studyMode ?? "OnCampus" },
-        ],
-      }[activeSection]
-    : [];
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8f7f4]">
+      <div className="text-2xl font-semibold text-[#1e3c2c]">Loading AUY Portal...</div>
+    </div>;
+  }
 
   if (!isAuthenticated) {
     return <Login error={authError} loading={authLoading} onSubmit={login} />;
   }
 
-  const renderHero = () => {
-    if (!data) {
-      return (
-        <section className="portal-card h-80 rounded-[40px] p-6">
-          <div className="skeleton-block h-full w-full rounded-[30px]" />
-        </section>
-      );
-    }
+  if (loading || !data) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#f8f7f4]">
+      <div className="text-2xl font-semibold text-[#1e3c2c]">Loading your dashboard...</div>
+    </div>;
+  }
 
-    return (
-      <section className="portal-card relative overflow-hidden rounded-[40px] px-6 py-7 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(136,216,192,0.34),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(212,178,140,0.2),transparent_28%),linear-gradient(180deg,rgba(255,255,255,0.22),transparent_60%)]" />
-        <div className="pointer-events-none absolute -right-10 top-[-4rem] h-48 w-48 rounded-full bg-white/40 blur-3xl" />
-        <div className="pointer-events-none absolute -left-12 bottom-[-5rem] h-56 w-56 rounded-full bg-[#88d8c0]/20 blur-3xl" />
+  const filteredCourses = (data.courses || []).filter(c => 
+    !search || [c.code, c.name, c.teacher].some(f => f?.toLowerCase().includes(search.toLowerCase()))
+  );
 
-        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.45fr)_24rem] xl:items-start">
-          <div>
-            <p className="eyebrow">American University of Yangon</p>
-            <h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-[-0.05em] text-slate-900 sm:text-5xl lg:text-[3.95rem] lg:leading-[0.95]">
-              {getGreeting(clock)}, {data.firstName}.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-              {activeMeta.description}
-            </p>
+  const filteredAnnouncements = (data.announcements || []).filter(a => 
+    !search || [a.title, a.content, a.author].some(f => f?.toLowerCase().includes(search.toLowerCase()))
+  );
 
-            <div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-600">
-              {[data.studentId, data.major, data.status, activeMeta.title].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-white/70 bg-white/58 px-4 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+  const filteredDeadlines = (data.deadlines || []).filter(d => 
+    !search || [d.title, d.course].some(f => f?.toLowerCase().includes(search.toLowerCase()))
+  );
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
-              {heroWidgets.map((widget) => (
-                <div key={widget.label} className="widget-panel px-5 py-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">{widget.label}</p>
-                  <p className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-slate-900">{widget.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="feature-panel p-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#204436]/70">Semester Cadence</p>
-              <div className="mt-5 flex items-end justify-between gap-4">
-                <div>
-                  <p className="text-5xl font-semibold tracking-[-0.05em] text-[#143126]">{data.semesterWeek}</p>
-                  <p className="mt-2 text-sm text-[#1d4336]/72">of {data.semesterWeeksTotal} weeks completed</p>
-                </div>
-                <div className="rounded-[22px] border border-white/52 bg-white/30 px-4 py-3 backdrop-blur-xl">
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-[#1d4336]/56">Campus Time</p>
-                  <p className="mt-2 text-base font-medium text-[#173328]">
-                    {clock.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 h-3 overflow-hidden rounded-full bg-white/32">
-                <div
-                  className="h-full rounded-full bg-[linear-gradient(90deg,#ffffff_0%,#f6eadc_100%)] transition-all duration-700"
-                  style={{ width: `${semesterProgress}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-              <div className="widget-panel px-5 py-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Next Deadline</p>
-                <p className="mt-4 text-lg font-semibold text-slate-900">{nextDeadline?.title ?? "No urgent items"}</p>
-                <p className="mt-2 text-sm text-slate-500">
-                  {nextDeadline ? `${nextDeadline.course} due in ${nextDeadline.daysLeft} days` : "Your task list is comfortably clear."}
-                </p>
-              </div>
-              <div className="widget-panel px-5 py-5">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Portal Feed</p>
-                  <span className={`h-2.5 w-2.5 rounded-full bg-[#56ab91] ${syncing ? "soft-pulse" : ""}`} />
-                </div>
-                <p className="mt-4 text-lg font-semibold text-slate-900">{data.unreadAnnouncements} unread notices</p>
-                <p className="mt-2 text-sm text-slate-500">
-                  {syncing ? "Syncing the latest sheet edits now." : "Announcements and updates refresh quietly in the background."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  };
-
-  const renderSection = () => {
-    if (!data) {
-      return <AppSkeleton />;
-    }
-
-    switch (activeSection) {
-      case "dashboard":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-4">
-              <ProfileCard
-                email={data.email}
-                enrolledCoursesCount={data.enrolledCoursesCount}
-                fullName={data.fullName}
-                gpa={data.gpa}
-                major={data.major}
-                status={data.status}
-                studentId={data.studentId}
-                studyMode={data.studyMode}
-              />
-            </div>
-            <div className="xl:col-span-8">
-              <CourseProgressCard courses={filtered.courses} />
-            </div>
-            <div className="xl:col-span-5">
-              <AttendanceSummaryCard attendance={data.attendance} attendanceByCourse={filtered.attendanceByCourse} />
-            </div>
-            <div className="xl:col-span-7">
-              <AnnouncementsCard announcements={filtered.announcements} disabled={syncing} onMarkRead={markAnnouncementRead} />
-            </div>
-            <div className="xl:col-span-7">
-              <DeadlinesCard deadlines={filtered.deadlines} />
-            </div>
-            <div className="xl:col-span-5">
-              <QuickStatsCard
-                activeCourses={data.activeCourses}
-                attendanceRate={attendanceRate}
-                completedCourses={data.completedCourses}
-                creditsEnrolled={data.creditsEnrolled}
-                daysUntilFinals={data.daysUntilFinals}
-                gpa={data.gpa}
-                semesterWeek={data.semesterWeek}
-                semesterWeeksTotal={data.semesterWeeksTotal}
-                unreadAnnouncements={data.unreadAnnouncements}
-              />
-            </div>
-          </div>
-        );
-      case "courses":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-8">
-              <CourseProgressCard courses={filtered.courses} />
-            </div>
-            <div className="xl:col-span-4">
-              <QuickStatsCard
-                activeCourses={data.activeCourses}
-                attendanceRate={attendanceRate}
-                completedCourses={data.completedCourses}
-                creditsEnrolled={data.creditsEnrolled}
-                daysUntilFinals={data.daysUntilFinals}
-                gpa={data.gpa}
-                semesterWeek={data.semesterWeek}
-                semesterWeeksTotal={data.semesterWeeksTotal}
-                unreadAnnouncements={data.unreadAnnouncements}
-              />
-            </div>
-            <div className="xl:col-span-12">
-              <AttendanceSummaryCard attendance={data.attendance} attendanceByCourse={filtered.attendanceByCourse} />
-            </div>
-          </div>
-        );
-      case "calendar":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-7">
-              <DeadlinesCard deadlines={filtered.deadlines} />
-            </div>
-            <div className="xl:col-span-5">
-              <AnnouncementsCard announcements={filtered.announcements} disabled={syncing} onMarkRead={markAnnouncementRead} />
-            </div>
-          </div>
-        );
-      case "messages":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-8">
-              <AnnouncementsCard announcements={filtered.announcements} disabled={syncing} onMarkRead={markAnnouncementRead} />
-            </div>
-            <div className="xl:col-span-4">
-              <ProfileCard
-                email={data.email}
-                enrolledCoursesCount={data.enrolledCoursesCount}
-                fullName={data.fullName}
-                gpa={data.gpa}
-                major={data.major}
-                status={data.status}
-                studentId={data.studentId}
-                studyMode={data.studyMode}
-              />
-            </div>
-          </div>
-        );
-      case "assignments":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-7">
-              <DeadlinesCard deadlines={filtered.deadlines} />
-            </div>
-            <div className="xl:col-span-5">
-              <CourseProgressCard courses={filtered.courses} />
-            </div>
-          </div>
-        );
-      case "analytics":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-5">
-              <QuickStatsCard
-                activeCourses={data.activeCourses}
-                attendanceRate={attendanceRate}
-                completedCourses={data.completedCourses}
-                creditsEnrolled={data.creditsEnrolled}
-                daysUntilFinals={data.daysUntilFinals}
-                gpa={data.gpa}
-                semesterWeek={data.semesterWeek}
-                semesterWeeksTotal={data.semesterWeeksTotal}
-                unreadAnnouncements={data.unreadAnnouncements}
-              />
-            </div>
-            <div className="xl:col-span-7">
-              <AttendanceSummaryCard attendance={data.attendance} attendanceByCourse={filtered.attendanceByCourse} />
-            </div>
-            <div className="xl:col-span-12">
-              <CourseProgressCard courses={filtered.courses} />
-            </div>
-          </div>
-        );
-      case "settings":
-        return (
-          <div className="grid gap-6 xl:grid-cols-12">
-            <div className="xl:col-span-5">
-              <ProfileCard
-                email={data.email}
-                enrolledCoursesCount={data.enrolledCoursesCount}
-                fullName={data.fullName}
-                gpa={data.gpa}
-                major={data.major}
-                status={data.status}
-                studentId={data.studentId}
-                studyMode={data.studyMode}
-              />
-            </div>
-            <div className="xl:col-span-7">
-              <section className="portal-card p-6 lg:p-8">
-                <p className="eyebrow">Account Security</p>
-                <h3 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-slate-900">Keep your AUY portal secure</h3>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-                  Update your password, confirm the current session, and sign out safely whenever you are on a shared device.
-                </p>
-                <div className="mt-8 grid gap-4 sm:grid-cols-2">
-                  <div className="widget-panel p-5">
-                    <p className="text-sm font-medium text-slate-500">Signed in as</p>
-                    <p className="mt-2 break-all text-lg font-semibold text-slate-900">{userEmail}</p>
-                  </div>
-                  <div className="feature-panel p-5">
-                    <p className="text-sm font-medium text-[#1e4336]/72">Sync source</p>
-                    <p className="mt-2 text-lg font-semibold text-[#173328]">Google Sheets via Apps Script</p>
-                  </div>
-                </div>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <button className="primary-button px-6 py-4 text-sm" onClick={() => setPasswordModalOpen(true)} type="button">
-                    Change Password
-                  </button>
-                  <button className="secondary-button px-6 py-4 text-sm" onClick={logout} type="button">
-                    Sign Out
-                  </button>
-                </div>
-              </section>
-            </div>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  const urgentCount = (data.deadlines || []).filter(d => d.daysLeft <= 7).length;
+  const attendanceRate = data.attendance?.present && data.attendance?.total 
+    ? Math.round((data.attendance.present / data.attendance.total) * 100) 
+    : 0;
 
   return (
-    <div className="min-h-screen bg-[var(--portal-bg)] text-slate-900">
-      <Sidebar
-        activeItem={activeSection}
+    <div className="min-h-screen bg-[#f8f7f4]">
+      <Sidebar 
+        activePage={activePage}
+        onPageChange={setActivePage}
         isOpen={sidebarOpen}
-        items={NAV_ITEMS}
         onClose={() => setSidebarOpen(false)}
-        onSelect={(nextSection) => setActiveSection(nextSection as SectionId)}
+        courseCount={data.courses?.length || 0}
+        unreadCount={data.unreadAnnouncements || 0}
+        userName={data.fullName || "Student"}
+        onLogout={logout}
       />
-
-      <div className="lg:pl-[20.5rem]">
-        <Header
-          activeSectionLabel={activeMeta.title}
-          canViewAllStudents={Boolean(data?.canViewAllStudents)}
+      
+      <div className="lg:ml-64">
+        <Header 
+          firstName={data.firstName || "Student"}
           clock={clock}
-          firstName={data?.firstName ?? "Student"}
-          onMenuToggle={() => setSidebarOpen(true)}
-          onSearchChange={setSearch}
-          onStudentChange={setSelectedStudentEmail}
           search={search}
-          selectedStudentEmail={selectedStudentEmail ?? data?.email ?? ""}
-          students={data?.students ?? []}
+          onSearchChange={setSearch}
+          onMenuToggle={() => setSidebarOpen(true)}
           syncing={syncing}
+          canViewAllStudents={data.canViewAllStudents || false}
+          students={data.students || []}
+          selectedEmail={userEmail}
+          onStudentChange={() => {}}
         />
 
-        <main className="relative px-4 pb-16 pt-28 sm:px-6 lg:px-8">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.65),transparent_62%)]" />
-          <div className="pointer-events-none absolute right-8 top-8 hidden h-48 w-48 rounded-full bg-[#88d8c0]/10 blur-3xl lg:block" />
-          <section className="relative mx-auto flex w-full max-w-7xl flex-col gap-6">
-            <AnimatePresence initial={false} mode="wait">
-              <motion.div
-                key={`hero-${activeSection}-${data?.studentId ?? "loading"}`}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                initial={{ opacity: 0, y: 18 }}
-                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {renderHero()}
-              </motion.div>
-            </AnimatePresence>
+        <main className="p-6">
+          {data.canViewAllStudents && (
+            <SyncStatus 
+              syncing={syncing}
+              lastSync={lastSync}
+              onRefresh={refresh}
+              visible={true}
+            />
+          )}
 
-            {data?.canViewAllStudents ? (
-              <SyncStatus
-                lastSync={lastSync}
-                lastUpdatedAt={data.lastUpdatedAt}
-                onRefresh={refresh}
-                syncing={syncing}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6">
+              Error: {error}
+            </div>
+          )}
+
+          {activePage === "dashboard" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <ProfileCard 
+                email={data.email}
+                fullName={data.fullName || ""}
+                studentId={data.studentId || ""}
+                major={data.major || ""}
+                status={data.status || "Active"}
+                studyMode={data.studyMode || "OnCampus"}
+                gpa={data.gpa || 0}
+                enrolledCoursesCount={data.courses?.length || 0}
               />
-            ) : null}
+              <QuickStatsCard 
+                gpa={data.gpa || 0}
+                attendanceRate={attendanceRate}
+                courseCount={data.courses?.length || 0}
+                unreadCount={data.unreadAnnouncements || 0}
+                activeCourses={data.courses?.length || 0}
+                completedCourses={0}
+                creditsEnrolled={18}
+                daysUntilFinals={38}
+                semesterWeek={8}
+                semesterWeeksTotal={16}
+              />
+              <CourseProgressCard courses={filteredCourses} />
+              <AttendanceSummaryCard 
+                attendance={data.attendance || { present: 0, late: 0, absent: 0, total: 0 }}
+                attendanceByCourse={data.attendanceByCourse || []}
+              />
+              <AnnouncementsCard 
+                announcements={filteredAnnouncements}
+                disabled={syncing}
+                onMarkRead={markRead}
+              />
+              <DeadlinesCard deadlines={filteredDeadlines} />
+            </div>
+          )}
 
-            {error ? (
-              <section className="portal-card p-6 lg:p-8">
-                <p className="eyebrow">Connection</p>
-                <h2 className="mt-4 text-2xl font-semibold tracking-[-0.03em] text-slate-900">The portal could not load new data</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">{error}</p>
-                <div className="mt-6 flex flex-wrap gap-3">
-                  <button className="primary-button px-6 py-4 text-sm" onClick={refresh} type="button">
-                    Try Again
-                  </button>
-                  <button className="secondary-button px-6 py-4 text-sm" onClick={logout} type="button">
-                    Sign Out
-                  </button>
+          {activePage === "courses" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CourseProgressCard courses={filteredCourses} />
+              <QuickStatsCard 
+                gpa={data.gpa || 0}
+                attendanceRate={attendanceRate}
+                courseCount={data.courses?.length || 0}
+                unreadCount={data.unreadAnnouncements || 0}
+                activeCourses={data.courses?.length || 0}
+                completedCourses={0}
+                creditsEnrolled={18}
+                daysUntilFinals={38}
+                semesterWeek={8}
+                semesterWeeksTotal={16}
+              />
+            </div>
+          )}
+
+          {activePage === "settings" && (
+            <div className="max-w-2xl bg-white rounded-3xl p-8 shadow-xl">
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Settings</h2>
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-xl">
+                  <p className="text-sm text-gray-500">Signed in as</p>
+                  <p className="text-lg font-semibold text-gray-900">{userEmail}</p>
                 </div>
-              </section>
-            ) : null}
-
-            <AnimatePresence initial={false} mode="wait">
-              <motion.div
-                key={`section-${activeSection}-${data?.studentId ?? "loading"}`}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                initial={{ opacity: 0, y: 20 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {loading && !data ? <AppSkeleton /> : renderSection()}
-              </motion.div>
-            </AnimatePresence>
-          </section>
+                <button
+                  onClick={() => setPasswordModal(true)}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-[#1e3c2c] to-[#2d5a42] text-white font-bold rounded-xl hover:shadow-lg transition"
+                >
+                  Change Password
+                </button>
+                <button
+                  onClick={logout}
+                  className="w-full py-3 px-4 border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
-      <ChangePassword
-        onClose={() => setPasswordModalOpen(false)}
-        onSubmit={handlePasswordChange}
-        open={passwordModalOpen}
-      />
+      {passwordModal && (
+        <ChangePassword
+          open={passwordModal}
+          onClose={() => setPasswordModal(false)}
+          onSubmit={async (oldPass, newPass) => {
+            await changePasswordRequest({ email: userEmail, oldPassword: oldPass, newPassword: newPass });
+            setPasswordModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }
