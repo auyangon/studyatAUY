@@ -1,0 +1,287 @@
+﻿import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  FiHome, FiBook, FiFolder, FiCalendar, FiBell, 
+  FiUser, FiLogOut, FiRefreshCw, FiStar, FiClock,
+  FiCheckCircle, FiAlertCircle, FiDownload, FiEye
+} from 'react-icons/fi';
+import { api, Student, Enrollment, Material, Schedule, Deadline, Announcement, Attendance } from './services/api';
+import './index.css';
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [student, setStudent] = useState<Student | null>(null);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [schedule, setSchedule] = useState<Schedule[]>([]);
+  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    try {
+      const data = await api.login(email, password);
+      if (data.success) {
+        api.setToken(data.token);
+        setStudent(data.user);
+        setIsLoggedIn(true);
+        fetchAllData();
+      } else setError(data.error || 'Invalid credentials');
+    } catch { setError('Connection error'); } finally { setIsLoading(false); }
+  };
+
+  const fetchAllData = async () => {
+    try {
+      const [s, e, m, sch, d, a, att] = await Promise.all([
+        api.getStudent(), api.getEnrollments(), api.getMaterials(),
+        api.getSchedule(), api.getDeadlines(), api.getAnnouncements(), api.getAttendance()
+      ]);
+      setStudent(s); setEnrollments(e); setMaterials(m); setSchedule(sch);
+      setDeadlines(d); setAnnouncements(a); setAttendance(att);
+    } catch (error) { console.error('Fetch error:', error); }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchAllData();
+    setIsRefreshing(false);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
+  };
+
+  const handleLogout = () => { api.clearToken(); setIsLoggedIn(false); };
+  
+  const markAsRead = async (id: number) => {
+    setAnnouncements(announcements.map(a => a.id === id ? { ...a, read: true } : a));
+    await api.markAnnouncementRead(id);
+  };
+
+  const calculateGPA = () => {
+    const points = { 'A': 4, 'B': 3, 'C': 2, 'D': 1, 'F': 0 };
+    let total = 0, credits = 0;
+    enrollments.forEach(e => { 
+      total += (points[e.grade as keyof typeof points] || 0) * (e.credits || 3); 
+      credits += e.credits || 3; 
+    });
+    return credits > 0 ? (total / credits).toFixed(2) : '0.00';
+  };
+
+  const avgAttendance = () => {
+    if (!attendance.length) return '0%';
+    return Math.round(attendance.reduce((s, a) => s + (a.percentage * 100), 0) / attendance.length) + '%';
+  };
+
+  const unreadCount = announcements.filter(a => !a.read).length;
+  
+  const todaySchedule = schedule.filter(s => {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    return s.dayOfWeek === days[new Date().getDay()];
+  }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+  const upcomingDeadlines = deadlines.filter(d => {
+    const days = Math.ceil((new Date(d.dueDate).getTime() - Date.now()) / 86400000);
+    return days >= 0 && days <= 7;
+  });
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-[#f5f5f7] to-[#e9e9ed]">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="glass-card w-full max-w-md p-8"
+        >
+          <h1 className="text-3xl font-bold text-[#0071e3] text-center mb-8">AUY Portal</h1>
+          <form onSubmit={handleLogin} className="space-y-6">
+            <input 
+              type="email" 
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+              placeholder="Email" 
+              className="apple-input w-full" 
+              required 
+            />
+            <input 
+              type="password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              placeholder="Password" 
+              className="apple-input w-full" 
+              required 
+            />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button type="submit" disabled={isLoading} className="apple-button w-full">
+              {isLoading ? <FiRefreshCw className="animate-spin mx-auto" /> : 'Sign In'}
+            </button>
+          </form>
+          <div className="mt-6 p-4 bg-[#f5f5f7] rounded-xl text-xs">
+            <p className="font-medium mb-2">Test Accounts:</p>
+            <div>aung.khant.phyo@student.au.edu.mm / student123</div>
+            <div>chanmyae.au.edu.mm@gmail.com / student123</div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#f5f5f7] to-[#e9e9ed]">
+      <motion.div 
+        initial={{ y: -100 }} 
+        animate={{ y: 0 }} 
+        className="glass sticky top-0 z-50 px-6 py-4 flex justify-between items-center"
+      >
+        <h1 className="text-xl font-bold text-[#0071e3]">AUY Portal</h1>
+        <div className="flex items-center gap-4">
+          <button onClick={handleRefresh} className="p-2 rounded-full hover:bg-[#f5f5f7]">
+            <motion.div animate={{ rotate: isRefreshing ? 360 : 0 }}>
+              <FiRefreshCw />
+            </motion.div>
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-full bg-[#0071e3] flex items-center justify-center text-white font-bold">
+              {student?.studentName?.[0]}{student?.studentName?.split(' ')[1]?.[0]}
+            </div>
+            <span className="text-sm font-medium hidden md:block">{student?.studentName}</span>
+          </div>
+          <button onClick={handleLogout} className="p-2 rounded-full hover:bg-[#f5f5f7]">
+            <FiLogOut />
+          </button>
+        </div>
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Profile Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="glass-card mb-8 p-6"
+        >
+          <h2 className="text-2xl font-bold">{student?.studentName}</h2>
+          <div className="flex gap-2 mt-2">
+            <span className="badge">{student?.studentId}</span>
+            <span className="badge">{student?.major}</span>
+            <span className="badge-success">{student?.status}</span>
+          </div>
+        </motion.div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { title: 'GPA', value: calculateGPA(), icon: FiStar, color: 'bg-[#0071e3]' },
+            { title: 'Credits', value: enrollments.length * 3, icon: FiBook, color: 'bg-purple-500' },
+            { title: 'Attendance', value: avgAttendance(), icon: FiCheckCircle, color: 'bg-green-500' },
+            { title: 'Unread', value: unreadCount, icon: FiBell, color: 'bg-orange-500' }
+          ].map((stat, i) => (
+            <motion.div 
+              key={stat.title} 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.1 }} 
+              className="glass-card p-6"
+            >
+              <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center text-white mb-4`}>
+                <stat.icon size={24} />
+              </div>
+              <p className="text-[#86868b] text-sm">{stat.title}</p>
+              <p className="text-2xl font-bold">{stat.value}</p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Today's Schedule */}
+        <div className="glass-card p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <FiClock className="text-[#0071e3]" /> Today's Schedule
+          </h3>
+          {todaySchedule.length > 0 ? (
+            todaySchedule.map((item, i) => (
+              <div key={i} className="flex items-center p-3 bg-[#f5f5f7] rounded-xl mb-2">
+                <div className="w-20 text-sm font-medium text-[#0071e3]">{item.startTime}</div>
+                <div className="flex-1">
+                  <div className="font-medium">{item.courseId}</div>
+                  <div className="text-sm text-[#86868b]">{item.room} · {item.instructor}</div>
+                </div>
+                <span className="badge">{item.type}</span>
+              </div>
+            ))
+          ) : (
+            <p className="text-[#86868b] text-center py-4">No classes today</p>
+          )}
+        </div>
+
+        {/* Upcoming Deadlines */}
+        {upcomingDeadlines.length > 0 && (
+          <div className="glass-card p-6 mb-8">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <FiAlertCircle className="text-orange-500" /> Upcoming Deadlines
+            </h3>
+            {upcomingDeadlines.map((item, i) => {
+              const daysLeft = Math.ceil((new Date(item.dueDate).getTime() - Date.now()) / 86400000);
+              return (
+                <div key={i} className="flex items-center justify-between p-3 bg-[#f5f5f7] rounded-xl mb-2">
+                  <div>
+                    <div className="font-medium">{item.title}</div>
+                    <div className="text-sm text-[#86868b]">{item.courseId} · {item.type}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`font-semibold ${daysLeft <= 2 ? 'text-red-500' : ''}`}>
+                      {daysLeft === 0 ? 'Today' : daysLeft === 1 ? 'Tomorrow' : `${daysLeft} days`}
+                    </div>
+                    <div className="text-sm text-[#86868b]">{item.dueTime}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Courses Grid */}
+        <h2 className="text-2xl font-semibold mb-4">My Courses</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {enrollments.slice(0, 4).map((course, i) => (
+            <motion.div 
+              key={i} 
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ delay: i * 0.1 }} 
+              className="glass-card p-6"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{course.courseId}</h3>
+                  <p className="text-[#86868b]">{course.courseName}</p>
+                </div>
+                <span className={course.grade === 'A' ? 'badge-success' : course.grade === 'B' ? 'badge' : 'badge-warning'}>
+                  Grade: {course.grade}
+                </span>
+              </div>
+              <p className="text-sm mb-2">{course.teacherName}</p>
+              <p className="text-sm text-[#86868b] mb-4">{course.credits} credits</p>
+              <a 
+                href={course.googleClassroomLink} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="apple-button w-full text-center"
+              >
+                Open Classroom
+              </a>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
